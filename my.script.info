@@ -1,0 +1,192 @@
+local Players = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
+local TextChatService = game:GetService("TextChatService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Stats = game:GetService("Stats")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- ===== GUI الأساسية =====
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ServerInfoUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+screenGui.Enabled = false
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 250, 0, 280)
+frame.Position = UDim2.new(0.7, 0, 0.25, 0)
+frame.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = screenGui
+
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 6)
+uiCorner.Parent = frame
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 20, 0, 20)
+closeButton.Position = UDim2.new(1, -25, 0, 5)
+closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.TextSize = 14
+closeButton.Font = Enum.Font.SourceSansBold
+closeButton.Parent = frame
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(1, 0)
+closeCorner.Parent = closeButton
+
+closeButton.MouseButton1Click:Connect(function()
+	screenGui.Enabled = false
+end)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -40, 0, 30)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.Text = "Local Player:"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 20
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = frame
+
+local function createLabel(text, yPos)
+	local label = Instance.new("TextLabel")
+	label.Name = "InfoLabel"
+	label.Position = UDim2.new(0, 10, 0, yPos)
+	label.Size = UDim2.new(0, 200, 0, 20)
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.fromRGB(220, 220, 220)
+	label.Text = text
+	label.Font = Enum.Font.SourceSans
+	label.TextSize = 16
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = frame
+	return label
+end
+
+local playerIdLabel = createLabel("Player ID: " .. player.UserId, 35)
+local appearanceLabel = createLabel("Appearance: " .. player.DisplayName, 60)
+local runTimeLabel = createLabel("Run Time:", 85)
+local timeLabel = createLabel("0 Hour(s), 00 Minute(s), 00 Second(s)", 105)
+local statisticsLabel = createLabel("Statistics:", 130)
+local playerCountLabel = createLabel("", 150)
+local maxPlayersLabel = createLabel(tostring(game.Players.MaxPlayers) .. " Players Max", 170)
+local placeIdLabel = createLabel("Place ID: " .. game.PlaceId, 190)
+local placeNameLabel = createLabel("Place Name: Loading...", 210)
+local fpsLabel = createLabel("FPS: 0", 230)
+local pingLabel = createLabel("Ping: 0 ms", 250)
+
+-- تحديث بيانات السيرفر
+local function updateServerInfo()
+	playerCountLabel.Text = tostring(#Players:GetPlayers()) .. " Player(s)"
+	local success, info = pcall(function()
+		return MarketplaceService:GetProductInfo(game.PlaceId)
+	end)
+	if success and info and info.Name then
+		placeNameLabel.Text = "Place Name: " .. info.Name
+	else
+		placeNameLabel.Text = "Place Name: Unknown"
+	end
+end
+
+task.spawn(function()
+	while true do
+		updateServerInfo()
+		task.wait(5)
+	end
+end)
+
+-- ✅ عداد وقت التشغيل  
+local a = os.clock();
+task.spawn(function()
+	while true do
+		task.wait(1)
+		local b = math.floor(os.clock() - a)
+		local c = math.floor(b / 3600)
+		local d = math.floor((b % 3600) / 60)
+		local e = b % 60
+		timeLabel.Text = string.format("%d Hour(s), %02d Minute(s), %02d Second(s)", c, d, e)
+	end
+end)
+
+-- ✅ تحديث FPS و Ping
+task.spawn(function()
+	while true do
+		-- FPS
+		local fps = math.floor(1 / RunService.RenderStepped:Wait())
+		fpsLabel.Text = "FPS: " .. fps
+
+		-- Ping
+		local ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+		pingLabel.Text = "Ping: " .. tostring(ping) .. " ms"
+	end
+end)
+
+-- ===== واجهة أنيميشن "تطور شيكا" =====
+local animGui = Instance.new("ScreenGui")
+animGui.Name = "AnimUI"
+animGui.ResetOnSpawn = false
+animGui.Parent = playerGui
+
+local animLabel = Instance.new("TextLabel")
+animLabel.Size = UDim2.new(0.4, 0, 0.1, 0)
+animLabel.Position = UDim2.new(0.3, 0, 0.45, 0)
+animLabel.BackgroundTransparency = 0.2
+animLabel.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+animLabel.Text = "🔥 تطور شيكا لمحبين الصمله 🔥"
+animLabel.TextScaled = true
+animLabel.TextColor3 = Color3.new(1, 1, 1)
+animLabel.Font = Enum.Font.SourceSansBold
+animLabel.Parent = animGui
+animLabel.Visible = false
+
+local uiCorner2 = Instance.new("UICorner")
+uiCorner2.CornerRadius = UDim.new(0.2, 0)
+uiCorner2.Parent = animLabel
+
+local function playAnimation()
+	animLabel.Visible = true
+	animLabel.BackgroundTransparency = 1
+	animLabel.TextTransparency = 1
+
+	local tweenIn = TweenService:Create(animLabel, TweenInfo.new(0.5), {BackgroundTransparency = 0.2, TextTransparency = 0})
+	tweenIn:Play()
+	tweenIn.Completed:Wait()
+
+	task.wait(1.5)
+
+	local tweenOut = TweenService:Create(animLabel, TweenInfo.new(0.5), {BackgroundTransparency = 1, TextTransparency = 1})
+	tweenOut:Play()
+	tweenOut.Completed:Wait()
+
+	animLabel.Visible = false
+end
+
+-- أمر الشات يفتح الواجهة + الأنيميشن
+local function handleChat(msg, senderId)
+	if msg:lower() == ";infoo" and senderId == player.UserId then
+		playAnimation()
+		task.wait(2)
+		screenGui.Enabled = true
+	end
+end
+
+-- دعم الشات الجديد
+TextChatService.MessageReceived:Connect(function(message)
+	if message.TextSource and message.TextSource.UserId == player.UserId then
+		handleChat(message.Text, message.TextSource.UserId)
+	end
+end)
+
+-- دعم الشات القديم
+player.Chatted:Connect(function(msg)
+	handleChat(msg, player.UserId)
+end)
